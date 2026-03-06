@@ -11,7 +11,7 @@ export default function Home() {
       <div className="grid-pattern"></div>
       
       <div style={{ position: 'fixed', top: '20%', right: '5%', fontSize: '2rem', opacity: 0.3, animation: 'float 6s ease-in-out infinite', zIndex: 0, pointerEvents: 'none' }}>🦞</div>
-      <div style={{ position: 'fixed', bottom: '30%', left: '3%', fontSize: '1.5rem', opacity: 0.2float 8s, animation: ' ease-in-out infinite 1s', zIndex: 0, pointerEvents: 'none' }}>🦞</div>
+      <div style={{ position: 'fixed', bottom: '30%', left: '3%', fontSize: '1.5rem', opacity: 0.2, animation: 'float 8s ease-in-out infinite 1s', zIndex: 0, pointerEvents: 'none' }}>🦞</div>
       <div style={{ position: 'fixed', top: '60%', right: '8%', fontSize: '1.2rem', opacity: 0.25, animation: 'float 7s ease-in-out infinite 2s', zIndex: 0, pointerEvents: 'none' }}>🦞</div>
 
       <header className="header">
