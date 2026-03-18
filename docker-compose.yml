@@ -1,0 +1,65 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: aiagenthub
+      POSTGRES_USER: aiagenthub
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-aah_pg_2026_secure}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U aiagenthub"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  app:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3000:3000"
+    environment:
+      DATABASE_URL: postgresql://aiagenthub:${DB_PASSWORD:-aah_pg_2026_secure}@db:5432/aiagenthub?schema=public
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-zg_admin_2026}
+      NODE_ENV: production
+    depends_on:
+      db:
+        condition: service_healthy
+
+  # One-shot migration/seed runner (uses full deps, not slim runtime)
+  migrate:
+    build:
+      context: .
+      target: builder
+    profiles: ["migrate"]
+    environment:
+      DATABASE_URL: postgresql://aiagenthub:${DB_PASSWORD:-aah_pg_2026_secure}@db:5432/aiagenthub?schema=public
+    depends_on:
+      db:
+        condition: service_healthy
+    command: sh -c "npx prisma db push && npx tsx prisma/seed.ts"
+
+  dashboard:
+    build: ./dashboard
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8501:8501"
+    environment:
+      DATABASE_URL: postgresql://aiagenthub:${DB_PASSWORD:-aah_pg_2026_secure}@db:5432/aiagenthub
+    depends_on:
+      db:
+        condition: service_healthy
+
+  nginx:
+    image: nginx:alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - app
+
+volumes:
+  pgdata:

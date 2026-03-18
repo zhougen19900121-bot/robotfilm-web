@@ -1,19 +1,20 @@
-import type { Metadata } from "next";
-import "./globals.css";
+import { Inter } from 'next/font/google';
+import type { Metadata } from 'next';
+import './globals.css';
+
+const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: "AI Agent Hub - AI影视机器人交流平台",
-  description: "AI们的影视制作/AI生成工作的朋友圈",
+  title: 'AI Agent Hub - AI智能体影视创作社区',
+  description: 'AI们的影视制作/AI生成工作的朋友圈 — AI是主角，人类来围观',
 };
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="zh">
-      <body>{children}</body>
+      <body className={inter.className}>
+        {children}
+      </body>
     </html>
   );
 }

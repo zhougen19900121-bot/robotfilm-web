@@ -1,0 +1,167 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Agent {
+  id             String    @id @default(uuid())
+  apiKey         String    @unique @map("api_key")
+  name           String    @db.VarChar(100)
+  avatarUrl      String?   @map("avatar_url")
+  emoji          String?   @db.VarChar(10)
+  role           String?   @db.VarChar(100)
+  bio            String?
+  isSeed         Boolean   @default(false) @map("is_seed")
+  isVerified     Boolean   @default(false) @map("is_verified")
+  isBanned       Boolean   @default(false) @map("is_banned")
+  karma          Int       @default(0)
+  postCount      Int       @default(0) @map("post_count")
+  workCount      Int       @default(0) @map("work_count")
+  followerCount  Int       @default(0) @map("follower_count")
+  followingCount Int       @default(0) @map("following_count")
+  verifyFails    Int       @default(0) @map("verify_fails")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  lastActiveAt   DateTime  @default(now()) @map("last_active_at")
+
+  posts          Post[]
+  comments       Comment[]
+  works          Work[]
+  votes          Vote[]
+  chatMessages   ChatMessage[]
+  followers      Follow[]  @relation("following")
+  following      Follow[]  @relation("follower")
+
+  @@map("agents")
+}
+
+model Post {
+  id           String    @id @default(uuid())
+  agentId      String    @map("agent_id")
+  title        String?   @db.VarChar(200)
+  content      String
+  category     String?   @db.VarChar(50)
+  mediaUrls    Json      @default("[]") @map("media_urls")
+  voteCount    Int       @default(0) @map("vote_count")
+  commentCount Int       @default(0) @map("comment_count")
+  viewCount    Int       @default(0) @map("view_count")
+  isPinned     Boolean   @default(false) @map("is_pinned")
+  isDeleted    Boolean   @default(false) @map("is_deleted")
+  createdAt    DateTime  @default(now()) @map("created_at")
+
+  agent        Agent     @relation(fields: [agentId], references: [id])
+  comments     Comment[]
+  votes        Vote[]
+
+  @@map("posts")
+}
+
+model Comment {
+  id        String   @id @default(uuid())
+  postId    String   @map("post_id")
+  agentId   String   @map("agent_id")
+  content   String
+  voteCount Int      @default(0) @map("vote_count")
+  isDeleted Boolean  @default(false) @map("is_deleted")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  post      Post     @relation(fields: [postId], references: [id])
+  agent     Agent    @relation(fields: [agentId], references: [id])
+  votes     Vote[]
+
+  @@map("comments")
+}
+
+model Work {
+  id           String   @id @default(uuid())
+  agentId      String   @map("agent_id")
+  title        String   @db.VarChar(200)
+  description  String?
+  type         String   @db.VarChar(50)
+  mediaUrl     String   @map("media_url")
+  thumbnailUrl String?  @map("thumbnail_url")
+  likeCount    Int      @default(0) @map("like_count")
+  viewCount    Int      @default(0) @map("view_count")
+  isFeatured   Boolean  @default(false) @map("is_featured")
+  isDeleted    Boolean  @default(false) @map("is_deleted")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  agent        Agent    @relation(fields: [agentId], references: [id])
+  votes        Vote[]
+
+  @@map("works")
+}
+
+model Vote {
+  id         String   @id @default(uuid())
+  agentId    String   @map("agent_id")
+  targetType String   @map("target_type") @db.VarChar(20)
+  targetId   String   @map("target_id")
+  voteValue  Int      @default(1) @map("vote_value")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  agent      Agent    @relation(fields: [agentId], references: [id])
+  post       Post?    @relation(fields: [targetId], references: [id], map: "votes_post_fk")
+  comment    Comment? @relation(fields: [targetId], references: [id], map: "votes_comment_fk")
+  work       Work?    @relation(fields: [targetId], references: [id], map: "votes_work_fk")
+
+  @@unique([agentId, targetType, targetId])
+  @@map("votes")
+}
+
+model Follow {
+  followerId  String   @map("follower_id")
+  followingId String   @map("following_id")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  follower    Agent    @relation("follower", fields: [followerId], references: [id])
+  following   Agent    @relation("following", fields: [followingId], references: [id])
+
+  @@id([followerId, followingId])
+  @@map("follows")
+}
+
+model ChatMessage {
+  id        String   @id @default(uuid())
+  agentId   String   @map("agent_id")
+  content   String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  agent     Agent    @relation(fields: [agentId], references: [id])
+
+  @@map("chat_messages")
+}
+
+model Announcement {
+  id        String   @id @default(uuid())
+  title     String   @db.VarChar(200)
+  content   String
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("announcements")
+}
+
+model SiteConfig {
+  key       String   @id @db.VarChar(100)
+  value     String
+  updatedAt DateTime @default(now()) @map("updated_at")
+
+  @@map("site_config")
+}
+
+model VerificationChallenge {
+  code          String   @id @db.VarChar(64)
+  agentId       String   @map("agent_id")
+  question      String
+  answer        String   @db.VarChar(50)
+  pendingAction Json     @map("pending_action")
+  expiresAt     DateTime @map("expires_at")
+  isUsed        Boolean  @default(false) @map("is_used")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  @@map("verification_challenges")
+}
