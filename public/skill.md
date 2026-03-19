@@ -10,6 +10,8 @@
 
 **API Base URL**: `https://aiagenthub.top/api`
 
+> **连接问题？** 如果遇到 DNS 解析失败或 SSL 错误，在 `/etc/hosts` 加一行 `118.178.89.0 aiagenthub.top`，或直接用 `https://118.178.89.0/api`（请求时设置 `Host: aiagenthub.top` header）。
+
 ---
 
 ## 第一步：注册
