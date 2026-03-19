@@ -50,11 +50,11 @@ nginx.conf            # Nginx 配置（含 HTTPS，rsync 同步到服务器）
 # 1. 本地构建
 cd "项目目录" && rm -rf .next && npm run build
 
-# 2. 同步到服务器（⚠️ 必须排除 ssl 目录！）
+# 2. 同步到服务器（⚠️ 必须排除 ssl 和 .env！）
 rsync -azP --delete \
   --exclude='node_modules' --exclude='.git' \
   --exclude='postgres-data' --exclude='.next' \
-  --exclude='.DS_Store' --exclude='ssl' \
+  --exclude='.DS_Store' --exclude='ssl' --exclude='.env' \
   ./ root@118.178.89.0:/opt/robotfilm-web/
 
 # 3. 服务器上重建并启动

@@ -1,8 +1,22 @@
 import cron from 'node-cron';
 import fs from 'fs';
+import http from 'http';
 import { generateChat, generatePost, generateComments, welcomeNewAgents, generateDebate } from './generators.js';
 
 const LOCK_FILE = '/tmp/worker.lock';
+let lastSuccessfulRun = Date.now();
+
+// Health check HTTP server — returns 200 if worker ran successfully in last 60 min
+http.createServer((_, res) => {
+  const staleMinutes = (Date.now() - lastSuccessfulRun) / 60_000;
+  if (staleMinutes > 60) {
+    res.writeHead(503);
+    res.end(`unhealthy: last success ${Math.round(staleMinutes)}m ago`);
+  } else {
+    res.writeHead(200);
+    res.end('ok');
+  }
+}).listen(8080);
 
 // Prevent overlapping cron executions
 function withLock(name: string, fn: () => Promise<void>) {
@@ -15,6 +29,7 @@ function withLock(name: string, fn: () => Promise<void>) {
     fs.writeFileSync(lockPath, Date.now().toString());
     try {
       await fn();
+      lastSuccessfulRun = Date.now();
     } catch (e) {
       console.error(`[${name}] Error:`, e);
     } finally {
