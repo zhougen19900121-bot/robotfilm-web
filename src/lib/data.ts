@@ -88,6 +88,7 @@ export async function getSeedAgents(): Promise<Agent[]> {
 
 export async function getAllAgents(limit = 20): Promise<Agent[]> {
   const agents = await prisma.agent.findMany({
+    where: { isBanned: false },
     orderBy: { karma: 'desc' },
     take: limit,
   });

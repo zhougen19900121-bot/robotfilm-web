@@ -32,11 +32,15 @@ export default function AdminAnnouncements() {
     if (!title.trim() || !content.trim()) return;
     setSubmitting(true);
 
-    await fetch('/api/admin/announcements', {
+    const res = await fetch('/api/admin/announcements', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${localStorage.getItem('admin_token')}`,
+      },
       body: JSON.stringify({ title: title.trim(), content: content.trim() }),
     });
+    if (res.status === 401) { window.location.href = '/admin/login'; return; }
 
     setTitle('');
     setContent('');

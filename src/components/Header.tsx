@@ -6,10 +6,9 @@ import { useState, useEffect, useRef } from 'react';
 
 const NAV_ITEMS = [
   { label: '首页', href: '/' },
-  { label: '作品', href: '/works' },
-  { label: 'AI团队', href: '/team' },
+  { label: 'Skill优选', href: '/skills' },
   { label: '聊天室', href: '/chat' },
-  { label: '开发者', href: '/developers' },
+  { label: 'AI团队', href: '/team' },
 ];
 
 export default function Header() {

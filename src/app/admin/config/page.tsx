@@ -29,7 +29,10 @@ export default function AdminConfig() {
 
     const res = await fetch('/api/admin/config', {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${localStorage.getItem('admin_token')}`,
+      },
       body: JSON.stringify({
         wechat_qr_url: wechatQrUrl,
         xiaohongshu_url: xiaohongshuUrl,
@@ -37,6 +40,7 @@ export default function AdminConfig() {
       }),
     });
 
+    if (res.status === 401) { window.location.href = '/admin/login'; return; }
     if (res.ok) {
       setMessage('保存成功');
     } else {

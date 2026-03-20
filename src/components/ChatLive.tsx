@@ -10,80 +10,98 @@ interface ChatLiveProps {
 
 export default function ChatLive({ initialMessages }: ChatLiveProps) {
   const [messages, setMessages] = useState(initialMessages);
-  const bottomRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const rafRef = useRef<number | null>(null);
+  const lastTimeRef = useRef(0);
   const userInteractedRef = useRef(false);
-  const autoScrollTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const resumeRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pauseRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Auto-scroll: slowly scroll down, pause at bottom, then jump to top and repeat
-  const startAutoScroll = useCallback(() => {
+  // 匀速滚动 30px/sec
+  const scrollLoop = useCallback((timestamp: number) => {
+    if (userInteractedRef.current) return;
     const el = containerRef.current;
-    if (!el || userInteractedRef.current) return;
+    if (!el) return;
 
-    const scrollStep = () => {
-      if (!containerRef.current || userInteractedRef.current) return;
-      const c = containerRef.current;
-      const maxScroll = c.scrollHeight - c.clientHeight;
+    const maxScroll = el.scrollHeight - el.clientHeight;
+    if (maxScroll <= 0) {
+      rafRef.current = requestAnimationFrame(scrollLoop);
+      return;
+    }
 
-      if (maxScroll <= 0) return; // Not enough content to scroll
+    if (!lastTimeRef.current) lastTimeRef.current = timestamp;
+    const delta = timestamp - lastTimeRef.current;
+    lastTimeRef.current = timestamp;
 
-      if (c.scrollTop >= maxScroll - 1) {
-        // Reached bottom — pause, then jump to top
-        autoScrollTimerRef.current = setTimeout(() => {
-          if (!containerRef.current || userInteractedRef.current) return;
-          containerRef.current.scrollTop = 0;
-          // Continue scrolling after a brief pause at top
-          autoScrollTimerRef.current = setTimeout(scrollStep, 1500);
-        }, 3000);
-      } else {
-        // Scroll down 1px
-        c.scrollTop += 1;
-        autoScrollTimerRef.current = setTimeout(scrollStep, 50); // ~20px/sec
-      }
-    };
+    if (el.scrollTop >= maxScroll - 1) {
+      // 到底：暂停 2 秒 → 回顶 → 暂停 1 秒 → 继续
+      lastTimeRef.current = 0;
+      pauseRef.current = setTimeout(() => {
+        if (userInteractedRef.current || !containerRef.current) return;
+        containerRef.current.scrollTop = 0;
+        pauseRef.current = setTimeout(() => {
+          if (!userInteractedRef.current) {
+            lastTimeRef.current = 0;
+            rafRef.current = requestAnimationFrame(scrollLoop);
+          }
+        }, 1000);
+      }, 2000);
+      return;
+    }
 
-    // Start after a short delay
-    autoScrollTimerRef.current = setTimeout(scrollStep, 2000);
+    el.scrollTop += (delta / 1000) * 30;
+    rafRef.current = requestAnimationFrame(scrollLoop);
   }, []);
 
-  // Stop auto-scroll when user interacts
-  const handleUserInteraction = useCallback(() => {
+  const stop = useCallback(() => {
+    if (rafRef.current) { cancelAnimationFrame(rafRef.current); rafRef.current = null; }
+    if (pauseRef.current) { clearTimeout(pauseRef.current); pauseRef.current = null; }
+    lastTimeRef.current = 0;
+  }, []);
+
+  const start = useCallback(() => {
+    if (userInteractedRef.current) return;
+    lastTimeRef.current = 0;
+    rafRef.current = requestAnimationFrame(scrollLoop);
+  }, [scrollLoop]);
+
+  // 用户操作 → 停止，30 秒后恢复
+  const handleInteract = useCallback(() => {
     userInteractedRef.current = true;
-    if (autoScrollTimerRef.current) {
-      clearTimeout(autoScrollTimerRef.current);
-      autoScrollTimerRef.current = null;
-    }
-    // Resume auto-scroll after 30s of no interaction
-    setTimeout(() => {
+    stop();
+    if (resumeRef.current) clearTimeout(resumeRef.current);
+    resumeRef.current = setTimeout(() => {
       userInteractedRef.current = false;
-      startAutoScroll();
+      start();
     }, 30000);
-  }, [startAutoScroll]);
+  }, [stop, start]);
 
-  // Start auto-scroll on mount
+  // 挂载
   useEffect(() => {
-    startAutoScroll();
-
+    const initTimer = setTimeout(start, 1000);
     const el = containerRef.current;
     if (el) {
-      el.addEventListener('wheel', handleUserInteraction, { passive: true });
-      el.addEventListener('touchstart', handleUserInteraction, { passive: true });
+      el.addEventListener('wheel', handleInteract, { passive: true });
+      el.addEventListener('touchstart', handleInteract, { passive: true });
+      el.addEventListener('mousedown', handleInteract, { passive: true });
     }
-
     return () => {
-      if (autoScrollTimerRef.current) clearTimeout(autoScrollTimerRef.current);
+      clearTimeout(initTimer);
+      stop();
+      if (resumeRef.current) clearTimeout(resumeRef.current);
       if (el) {
-        el.removeEventListener('wheel', handleUserInteraction);
-        el.removeEventListener('touchstart', handleUserInteraction);
+        el.removeEventListener('wheel', handleInteract);
+        el.removeEventListener('touchstart', handleInteract);
+        el.removeEventListener('mousedown', handleInteract);
       }
     };
-  }, [startAutoScroll, handleUserInteraction]);
+  }, [start, stop, handleInteract]);
 
-  // Poll for new messages every 15s
+  // 轮询新消息
   useEffect(() => {
     const interval = setInterval(async () => {
       try {
-        const res = await fetch('/api/chat/messages?limit=50');
+        const res = await fetch('/api/chat/messages?limit=30');
         if (!res.ok) return;
         const json = await res.json();
         if (json.data && json.data.length > 0) {
@@ -91,8 +109,7 @@ export default function ChatLive({ initialMessages }: ChatLiveProps) {
             const lastPrevId = prev[prev.length - 1]?.id;
             const lastNewId = json.data[json.data.length - 1]?.id;
             if (lastPrevId === lastNewId) return prev;
-
-            const mapped = json.data.map((m: Record<string, unknown>) => ({
+            return json.data.map((m: Record<string, unknown>) => ({
               id: m.id as string,
               agent: {
                 id: (m.agent as Record<string, unknown>).id as string,
@@ -107,21 +124,19 @@ export default function ChatLive({ initialMessages }: ChatLiveProps) {
                 hour12: false,
               }),
             }));
-            return mapped;
           });
         }
       } catch {
         // silently fail
       }
     }, 15_000);
-
     return () => clearInterval(interval);
   }, []);
 
   return (
     <div
       ref={containerRef}
-      className="flex-1 overflow-y-auto p-6 space-y-6 scroll-smooth"
+      className="flex-1 overflow-y-auto p-6 space-y-6"
       style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
     >
       {messages.length === 0 ? (
@@ -137,7 +152,6 @@ export default function ChatLive({ initialMessages }: ChatLiveProps) {
           <ChatMessage key={msg.id} message={msg} />
         ))
       )}
-      <div ref={bottomRef} />
     </div>
   );
 }

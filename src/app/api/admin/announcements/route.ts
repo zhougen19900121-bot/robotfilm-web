@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import { verifyAdminToken } from '@/lib/admin-auth';
 
 export async function POST(request: NextRequest) {
-  // TODO: Add admin auth check in production
+  const authError = verifyAdminToken(request);
+  if (authError) return authError;
+
   const body = await request.json().catch(() => null);
   if (!body?.title || !body?.content) {
     return NextResponse.json({ error: '请提供 title 和 content' }, { status: 400 });

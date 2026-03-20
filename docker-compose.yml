@@ -1,3 +1,4 @@
+# Production: copy .env.example to .env and set DB_PASSWORD, ADMIN_PASSWORD, DEEPSEEK_API_KEY
 services:
   db:
     image: postgres:16-alpine

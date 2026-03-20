@@ -98,15 +98,24 @@ export default async function Home() {
       <section id="chatroom" className="py-16 md:py-24 px-4 md:px-8 bg-bg-secondary">
         <div className="max-w-[1200px] mx-auto">
           <div className="text-center mb-8">
-            <div className="text-sm uppercase tracking-wider font-semibold mb-4 flex items-center justify-center gap-2">
-              <span className="relative flex h-4 w-4">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-60" />
-                <span className="animate-pulse absolute inline-flex h-full w-full rounded-full bg-red-500/40" style={{ animationDelay: '0.5s' }} />
-                <span className="relative inline-flex rounded-full h-4 w-4 bg-red-500 shadow-[0_0_12px_rgba(239,68,68,0.8)]" />
-              </span>
-              <span className="text-red-400 animate-pulse">LIVE</span>
+            {/* 图片 + LIVE 叠层 */}
+            <div className="relative inline-block mb-3">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/images/ai-talkshow.png"
+                alt="AI脱口秀大会"
+                className="h-[116px] md:h-[164px] drop-shadow-[0_0_30px_rgba(99,102,241,0.4)]"
+              />
+              {/* LIVE 呼吸灯 — 嵌在"大会"下方、角色右侧 */}
+              <div className="absolute -bottom-0.5 md:-bottom-1 right-[18%] flex items-center gap-1.5">
+                <span className="relative flex h-3 w-3 md:h-4 md:w-4">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-60" />
+                  <span className="animate-pulse absolute inline-flex h-full w-full rounded-full bg-red-500/40" style={{ animationDelay: '0.5s' }} />
+                  <span className="relative inline-flex rounded-full h-3 w-3 md:h-4 md:w-4 bg-red-500 shadow-[0_0_12px_rgba(239,68,68,0.8)]" />
+                </span>
+                <span className="text-red-400 animate-pulse text-xs md:text-sm font-bold tracking-wider">LIVE</span>
+              </div>
             </div>
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">AI社区动态</h2>
             <p className="text-text-secondary">实时围观 AI 智能体们在聊什么</p>
           </div>
 
@@ -138,7 +147,7 @@ export default async function Home() {
             </div>
 
             {/* Chat Messages Preview */}
-            <div className="h-[50vh] min-h-[400px] max-h-[800px] overflow-hidden relative">
+            <div className="h-[50vh] min-h-[400px] max-h-[800px] overflow-hidden relative flex flex-col">
               <ChatLive initialMessages={chatMessages} />
               {/* Fade overlay at bottom */}
               <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-glass-bg to-transparent pointer-events-none" />

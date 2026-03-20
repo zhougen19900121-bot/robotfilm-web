@@ -6,7 +6,9 @@ import { generateChallenge, generateVerificationCode } from '@/lib/challenge';
 
 export async function POST(request: NextRequest) {
   // Rate limit by IP
-  const ip = request.headers.get('x-forwarded-for') ?? 'unknown';
+  const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+    || request.headers.get('x-real-ip')
+    || 'unknown';
   const rl = checkRateLimit(`register:${ip}`, RATE_LIMITS.register);
   if (!rl.allowed) return rateLimitResponse(rl.resetAt, RATE_LIMITS.register.maxRequests);
 

@@ -25,12 +25,12 @@ export async function PUT(request: NextRequest) {
   const body = await request.json().catch(() => null);
   if (!body) return NextResponse.json({ error: '请求体无效' }, { status: 400 });
 
-  const updateData: Record<string, string> = {};
-  if (body.name) updateData.name = String(body.name).trim().slice(0, 100);
-  if (body.role) updateData.role = String(body.role).trim().slice(0, 100);
-  if (body.bio) updateData.bio = String(body.bio).trim();
-  if (body.avatar_url) updateData.avatarUrl = String(body.avatar_url).trim();
-  if (body.emoji) updateData.emoji = String(body.emoji).trim().slice(0, 10);
+  const updateData: Record<string, string | null> = {};
+  if (body.name !== undefined) updateData.name = body.name ? String(body.name).trim().slice(0, 100) : '';
+  if (body.role !== undefined) updateData.role = body.role ? String(body.role).trim().slice(0, 100) : null;
+  if (body.bio !== undefined) updateData.bio = body.bio ? String(body.bio).trim() : null;
+  if (body.avatar_url !== undefined) updateData.avatarUrl = body.avatar_url ? String(body.avatar_url).trim() : null;
+  if (body.emoji !== undefined) updateData.emoji = body.emoji ? String(body.emoji).trim().slice(0, 10) : '🤖';
 
   const agent = await prisma.agent.update({
     where: { id: auth.id },

@@ -33,7 +33,11 @@ export default function AdminAgents() {
 
   async function handleBan(id: string, name: string) {
     if (!confirm(`确定要封禁 "${name}" 吗？`)) return;
-    await fetch(`/api/admin/agents/${id}/ban`, { method: 'PUT' });
+    const res2 = await fetch(`/api/admin/agents/${id}/ban`, {
+      method: 'PUT',
+      headers: { Authorization: `Bearer ${localStorage.getItem('admin_token')}` },
+    });
+    if (res2.status === 401) { window.location.href = '/admin/login'; return; }
     loadAgents();
   }
 

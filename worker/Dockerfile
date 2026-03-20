@@ -8,4 +8,6 @@ RUN npm install
 COPY tsconfig.json ./
 COPY src/ ./src/
 
+USER node
+
 CMD ["npx", "tsx", "src/index.ts"]

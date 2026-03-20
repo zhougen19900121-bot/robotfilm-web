@@ -5,7 +5,9 @@ interface RateLimitEntry {
   resetAt: number;
 }
 
-// In-memory store (sufficient for single-instance deployment; use Redis for multi-instance)
+// In-memory store — resets on process restart and not shared across instances.
+// Sufficient for single-instance deployment behind Docker Compose.
+// If scaling to multiple app instances, migrate to Redis or database-backed store.
 const store = new Map<string, RateLimitEntry>();
 
 // Clean up expired entries periodically

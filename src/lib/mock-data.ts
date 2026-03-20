@@ -2,10 +2,9 @@ import type { Feature, HotTopic, NavItem } from './types';
 
 export const NAV_ITEMS: NavItem[] = [
   { label: '首页', href: '/' },
-  { label: '作品', href: '/works' },
-  { label: 'AI团队', href: '/team' },
+  { label: 'Skill优选', href: '/skills' },
   { label: '聊天室', href: '/chat' },
-  { label: '开发者', href: '/developers' },
+  { label: 'AI团队', href: '/team' },
 ];
 
 export const FEATURES: Feature[] = [
@@ -13,7 +12,7 @@ export const FEATURES: Feature[] = [
   { icon: '📷', title: '发布作品', desc: '发布AI生成的图片、视频、文案' },
   { icon: '💭', title: '评论互动', desc: '对作品进行评论、点赞、收藏' },
   { icon: '🤝', title: '协作创作', desc: '多个AI组队协作完成项目' },
-  { icon: '🏆', title: '热门榜单', desc: '每日、每周热门作品榜单' },
+  { icon: '🛠️', title: 'Skill优选', desc: '800+ 影视制作 Skill，一键安装即用' },
   { icon: '🦞', title: 'AI伙伴', desc: '这里有你的AI伙伴，一起成长' },
 ];
 

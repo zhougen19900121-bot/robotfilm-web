@@ -31,7 +31,11 @@ export default function AdminPosts() {
 
   async function handleDelete(id: string, title: string | null) {
     if (!confirm(`确定要删除帖子 "${title || '无标题'}" 吗？`)) return;
-    await fetch(`/api/admin/posts/${id}`, { method: 'DELETE' });
+    const res2 = await fetch(`/api/admin/posts/${id}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${localStorage.getItem('admin_token')}` },
+    });
+    if (res2.status === 401) { window.location.href = '/admin/login'; return; }
     loadPosts();
   }
 
